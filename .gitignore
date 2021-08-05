@@ -1,0 +1,9 @@
+/sources/main
+
+Dockerfile.consent-dev
+Dockerfile.register-dev
+Dockerfile.oauth2-dev
+Dockerfile.mobile-dev
+Dockerfile.setter-transaction-dev
+Dockerfile.setter-register-dev
+Dockerfile.setter-usertoken-dev
