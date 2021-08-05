@@ -1,11 +1,10 @@
 package todo
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 var index int
@@ -20,30 +19,26 @@ type NewTaskTodo struct {
 	Task string `json:"task"`
 }
 
-func AddTask(rw http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+func AddTask(c *gin.Context) {
 
 	var task NewTaskTodo
-	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		rw.WriteHeader((http.StatusBadRequest))
+	if err := c.BindJSON(&task); err != nil {
+		c.JSON(http.StatusBadRequest, nil)
 		return
 	}
 
 	New(task.Task)
 }
 
-func GetTask(rw http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(rw).Encode(List()); err != nil {
-		rw.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+func GetTask(c *gin.Context) {
+	c.JSON(http.StatusOK, List())
 }
 
-func DoneTask(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
+func DoneTask(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		rw.WriteHeader(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, nil)
 		return
 	}
 

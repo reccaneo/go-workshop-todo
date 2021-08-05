@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,15 +8,13 @@ import (
 	"todo/todo"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	r := mux.NewRouter()
-	privateRoute := r.NewRoute().Subrouter()
-	privateRoute.Use(authMiddleware)
+	r := gin.Default()
 
-	r.HandleFunc("/auth/", func(rw http.ResponseWriter, r *http.Request) {
+	r.GET("/auth/", func(c *gin.Context) {
 		mySigningKey := []byte("passowrd")
 		claims := &jwt.StandardClaims{
 			Issuer:    "test",
@@ -27,38 +24,29 @@ func main() {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		ss, err := token.SignedString(mySigningKey)
 		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, nil)
 			return
 		}
 
-		json.NewEncoder(rw).Encode(map[string]string{
+		c.JSON(http.StatusOK, map[string]string{
 			"token": ss,
 		})
 
-	}).Methods(http.MethodGet)
-
-	r.HandleFunc("/todos/", todo.AddTask).Methods(http.MethodPut)
-
-	privateRoute.HandleFunc("/todos/", todo.GetTask).Methods(http.MethodGet)
-
-	r.HandleFunc("/todos/{id}", todo.DoneTask).Methods(http.MethodPut)
-
-	http.ListenAndServe(":9090", r)
-}
-
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Do stuff here
-		fmt.Println(r.RequestURI)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r)
 	})
+	authMiddleware := authMiddleware()
+	r.PUT("/todos/", todo.AddTask)
+
+	r.GET("/todos/", authMiddleware, todo.GetTask)
+
+	r.PUT("/todos/:id", todo.DoneTask)
+
+	r.Run(":9090")
 }
 
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+func authMiddleware() func(c *gin.Context) {
+	return func(c *gin.Context) {
 		// Token from another example.  This token is expired
-		tokenString := r.Header.Get("Authorization")
+		tokenString := c.GetHeader("Authorization")
 		tokenString = strings.ReplaceAll(tokenString, "Bearer ", "")
 		mySigningKey := []byte("passowrd")
 		_, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -70,10 +58,9 @@ func authMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			rw.WriteHeader(http.StatusUnauthorized)
+			c.JSON(http.StatusBadRequest, nil)
 			return
 		}
 
-		next.ServeHTTP(rw, r)
-	})
+	}
 }
