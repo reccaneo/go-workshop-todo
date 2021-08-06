@@ -12,6 +12,14 @@ import (
 )
 
 func main() {
+	// db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// db.AutoMigrate(&todo.Task{})
+
+	app := todo.NewApp(todo.NewMemInsert())
+
 	//	API should aware to
 	//	1.Shutdown graceful
 	//	2.Race conditions
@@ -21,9 +29,9 @@ func main() {
 
 	r.GET("/auth/", generateAuth)
 
-	api.PUT("/todos/", todo.AddTask)
+	r.PUT("/todos/", app.AddTask)
 
-	api.GET("/todos/", todo.GetTask)
+	r.GET("/todos/", todo.GetTask)
 
 	api.PUT("/todos/:id", todo.DoneTask)
 
