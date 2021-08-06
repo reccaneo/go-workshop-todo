@@ -3,6 +3,7 @@ package repository
 import "todo/entities"
 
 type Repositoryr interface {
-	NewTask(*entities.Task) error
-	GetAllTask() map[int]*entities.Task
+	NewTask(interface{}) error
+	GetAllTask() (map[uint]*entities.Task, error)
+	TaskDone(uint) error
 }

@@ -19,7 +19,7 @@ func main() {
 	// }
 	// db.AutoMigrate(&todo.Task{})
 
-	app := todo.NewApp(repository.NewRepotitory(repository.NewMemInsert()))
+	app := todo.NewApp(repository.NewMemoryRepository())
 
 	//	API should aware to
 	//	1.Shutdown graceful
@@ -34,7 +34,7 @@ func main() {
 
 	r.GET("/todos/", app.GetTask)
 
-	api.PUT("/todos/:id", todo.DoneTask)
+	api.PUT("/todos/:id", app.DoneTask)
 
 	r.Run(":9090")
 }
