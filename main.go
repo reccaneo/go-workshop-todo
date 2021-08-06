@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"todo/repository"
 	"todo/todo"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -18,7 +19,7 @@ func main() {
 	// }
 	// db.AutoMigrate(&todo.Task{})
 
-	app := todo.NewApp(todo.NewMemInsert())
+	app := todo.NewApp(repository.NewRepotitory(repository.NewMemInsert()))
 
 	//	API should aware to
 	//	1.Shutdown graceful
@@ -31,7 +32,7 @@ func main() {
 
 	r.PUT("/todos/", app.AddTask)
 
-	r.GET("/todos/", todo.GetTask)
+	r.GET("/todos/", app.GetTask)
 
 	api.PUT("/todos/:id", todo.DoneTask)
 
