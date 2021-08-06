@@ -4,21 +4,24 @@ import (
 	"net/http"
 	"strconv"
 	"todo/entities"
-	"todo/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
-type NewTaskTodo struct {
-	Task string `json:"task"`
-}
-type App struct {
-	repo repository.Repositoryr
+type Servicer interface {
+	Add(entities.Task) error
+	Done(id uint) error
+	List() (map[uint]*entities.Task, error)
 }
 
-func NewApp(repo repository.Repositoryr) *App {
+type App struct {
+	// repo repository.Repositoryr
+	srv Servicer
+}
+
+func NewApp(srv Servicer) *App {
 	return &App{
-		repo: repo,
+		srv: srv,
 	}
 }
 
@@ -29,17 +32,25 @@ func (app App) AddTask(c *gin.Context) {
 		return
 	}
 
-	if err := app.repo.NewTask(&entities.Task{
+	if err := app.srv.Add(entities.Task{
 		Title: task.Task,
 		Done:  false,
 	}); err != nil {
 		c.JSON(http.StatusInsufficientStorage, nil)
 		return
 	}
+
+	// if err := app.repo.NewTask(&entities.Task{
+	// 	Title: task.Task,
+	// 	Done:  false,
+	// }); err != nil {
+	// 	c.JSON(http.StatusInsufficientStorage, nil)
+	// 	return
+	// }
 }
 
 func (app App) GetTask(c *gin.Context) {
-	result, err := app.repo.GetAllTask()
+	result, err := app.srv.List()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
@@ -55,7 +66,7 @@ func (app App) DoneTask(c *gin.Context) {
 		return
 	}
 
-	if err = app.repo.TaskDone(uint(id)); err != nil {
+	if err = app.srv.Done(uint(id)); err != nil {
 		c.JSON(http.StatusInternalServerError, nil)
 		return
 	}

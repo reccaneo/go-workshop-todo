@@ -19,7 +19,8 @@ func main() {
 	// }
 	// db.AutoMigrate(&todo.Task{})
 
-	app := todo.NewApp(repository.NewMemoryRepository())
+	service := todo.NewService(repository.NewMemoryRepository())
+	app := todo.NewApp(service)
 
 	//	API should aware to
 	//	1.Shutdown graceful
